@@ -28,6 +28,7 @@ div:focus{
   align-items: center;
   flex-grow: 1 !important;
   overflow: hidden;
+  padding: 50px 0;
 }
 
 .notification {
@@ -55,14 +56,16 @@ div:focus{
   display: inline-flex;
   justify-content: center;
   align-items: center;
-  font-size: 2rem;
-  line-height: 2rem;
+  font-size: 1.5rem;
+  line-height: 1rem;
   font-weight: bold;
   vertical-align: middle;
   box-sizing: border-box;
   color: var(--tile-text-color);
+  background-color: var(--color-tone-7);
   text-transform: uppercase;
   user-select: none;
+  border-radius: 5px;
 }
 .tile::before {
   content: "";

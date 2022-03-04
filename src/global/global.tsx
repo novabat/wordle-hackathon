@@ -34,7 +34,7 @@ export const APP_NAME = "BFHL Health Wordle";
 
 export const SETTING = {
   COUNT_OF_TRY: 6,
-  LENGTH_OF_WORD: 5,
+  LENGTH_OF_WORD: 8,
 };
 
 export enum SVGICON {
