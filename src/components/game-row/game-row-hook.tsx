@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useContext, useEffect } from "react";
 import { useState } from "react";
 import { useCookies } from "react-cookie";
 import {
@@ -16,39 +16,40 @@ import {
   removeByAttr,
 } from "./game-row-helper";
 import { IKeyBoardEvent } from "./game-row-interface";
+import { GameContext } from "../../pages/game-page";
 var words = require("an-array-of-english-words");
 
 const useGameRowHook = () => {
+  const {gameData,updateGameData} = useContext(GameContext);
   const [message, setMessage] = useState("");
   const initialGuessedWords = Array.from(Array(SETTING.COUNT_OF_TRY), () =>
-    new Array(SETTING.LENGTH_OF_WORD).fill(null)
+    new Array(gameData.wordLength).fill(null)
   );
   const initialStates = Array.from(Array(SETTING.COUNT_OF_TRY), () =>
-    new Array(SETTING.LENGTH_OF_WORD).fill(KEY_STATE.EMPTY)
+    new Array(gameData.wordLength).fill(KEY_STATE.EMPTY)
   );
   const [guessedWords, setGuessedWords]: Array<any> =
     useState(initialGuessedWords);
   const [states, setStates]: any = useState(initialStates);
   const [animations, setAnimations]: any = useState(
     Array.from(Array(SETTING.COUNT_OF_TRY), () =>
-      new Array(SETTING.LENGTH_OF_WORD).fill(null)
+      new Array(gameData.wordLength).fill(null)
     )
   );
   const [tryStates, setTryStates] = useState(
     new Array(SETTING.COUNT_OF_TRY).fill(null)
   );
   const [number, setNumber] = useState(0);
-  const [tryCount, setTryCount] = useState(0);
-  const [gameFinished, setGameFinished] = useState(false);
+  const {currentStep, gameOver, wordLength} = gameData;
   const [selectedLetters, setSelectedLetters] = useState<any>([]);
   const [cookies, setCookie] = useCookies([
     "index",
     "states",
     "guessedWords",
     "selectedLetters",
-    "tryCount",
+    "currentStep",
     "number",
-    "gameFinished",
+    "gameOver",
     "animations",
   ]);
   const [word, setWord]: any = useState("");
@@ -64,24 +65,14 @@ const useGameRowHook = () => {
       setGuessedWords(cookies.guessedWords);
       setStates(cookies.states);
       setSelectedLetters(cookies.selectedLetters);
-      setTryCount(parseInt(cookies.tryCount));
+      updateGameData({...gameData,currentStep:cookies.currentStep})
       setNumber(parseInt(cookies.number));
       setAnimations(cookies.animations);
-      if (parseInt(cookies.gameFinished) === 1) {
-        setGameFinished(true);
+      if(cookies.gameOver ===1){
+        updateGameData({...gameData,gameOver:true})
       }
     }
-  }, [
-    index,
-    cookies.guessedWords,
-    cookies.states,
-    cookies.selectedLetters,
-    cookies.index,
-    cookies.tryCount,
-    cookies.number,
-    cookies.gameFinished,
-    cookies.animations,
-  ]);
+  }, []);
   const splitedWord = word.split("");
 
   const refreshMessage = (content: string, miniSec: number = 1000) => {
@@ -92,7 +83,7 @@ const useGameRowHook = () => {
   };
 
   const refreshStates = (state: string) => {
-    tryStates[tryCount] = state;
+    tryStates[currentStep] = state;
     setTryStates(tryStates);
     setTimeout(() => {
       setTryStates(new Array(SETTING.COUNT_OF_TRY).fill(null));
@@ -100,13 +91,13 @@ const useGameRowHook = () => {
   };
 
   const pressLetter = (event: IKeyBoardEvent | string) => {
-    if (number < SETTING.LENGTH_OF_WORD && !gameFinished) {
+    if (number < wordLength && !gameOver) {
       if (isEvent(event)) {
-        guessedWords[tryCount][number] = event.key.toLowerCase();
+        guessedWords[currentStep][number] = event.key.toLowerCase();
       } else {
-        guessedWords[tryCount][number] = event.toLowerCase();
+        guessedWords[currentStep][number] = event.toLowerCase();
       }
-      states[tryCount][number] = KEY_STATE.TBD;
+      states[currentStep][number] = KEY_STATE.TBD;
       setGuessedWords(guessedWords);
       setStates(states);
       setNumber(number + 1);
@@ -114,57 +105,57 @@ const useGameRowHook = () => {
   };
 
   const pressEnter = () => {
-    if (!gameFinished) {
-      if (number < SETTING.LENGTH_OF_WORD) {
+    if (!gameOver) {
+      if (number < wordLength) {
         refreshMessage(MESSAGE.NOT_ENOUGH_LETTER);
         refreshStates("invalid");
       } else {
-        if (words.includes(guessedWords[tryCount].join(""))) {
-          for (var i: number = 0; i < SETTING.LENGTH_OF_WORD; i++) {
+        if (words.includes(guessedWords[currentStep].join(""))) {
+          for (var i: number = 0; i < wordLength; i++) {
             let keyState;
-            if (guessedWords[tryCount][i] === splitedWord[i]) {
+            if (guessedWords[currentStep][i] === splitedWord[i]) {
               removeByAttr(
                 selectedLetters,
                 "letter",
-                guessedWords[tryCount][i]
+                guessedWords[currentStep][i]
               );
               keyState = KEY_STATE.CORRECT;
-            } else if (splitedWord.includes(guessedWords[tryCount][i])) {
+            } else if (splitedWord.includes(guessedWords[currentStep][i])) {
               keyState = KEY_STATE.PRESENT;
             } else {
               keyState = KEY_STATE.ABSENT;
             }
-            states[tryCount][i] = keyState;
+            states[currentStep][i] = keyState;
             selectedLetters.push({
-              letter: guessedWords[tryCount][i],
+              letter: guessedWords[currentStep][i],
               state: keyState,
             });
             setStates(states);
             setSelectedLetters(selectedLetters);
           }
-          if (tryCount === SETTING.COUNT_OF_TRY - 1) {
-            setGameFinished(true);
+          if (currentStep === SETTING.COUNT_OF_TRY - 1) {
+            updateGameData({...gameData, gameOver:true})
           }
-          if (guessedWords[tryCount].join("") === word) {
-            animations[tryCount].fill(ANIMATIONS.SCALE_CENTER);
+          if (guessedWords[currentStep].join("") === word) {
+            animations[currentStep].fill(ANIMATIONS.SCALE_CENTER);
             setAnimations(animations);
             refreshMessage(MESSAGE.CORRECT);
-            setGameFinished(true);
-            setCookie("gameFinished", 1);
+            updateGameData({...gameData, gameOver:true})
+            setCookie("gameOver", 1);
           } else {
-            animations[tryCount].fill(ANIMATIONS.SCALE_CENTER);
+            animations[currentStep].fill(ANIMATIONS.SCALE_CENTER);
             setAnimations(animations);
-            const nextTry = tryCount + 1;
-            setTryCount(nextTry);
+            const nextTry = currentStep + 1;
+            updateGameData({...gameData, currentStep:nextTry})
             setNumber(0);
-            if (tryCount === SETTING.COUNT_OF_TRY - 1) {
+            if (currentStep === SETTING.COUNT_OF_TRY - 1) {
               refreshMessage(word, 3000);
-              setCookie("gameFinished", 1);
+              setCookie("gameOver", 1);
             } else {
               refreshMessage(MESSAGE.INCORRECT);
-              setCookie("tryCount", nextTry);
+              setCookie("currentStep", nextTry);
               setCookie("number", 0);
-              setCookie("gameFinished", 0);
+              setCookie("gameOver", 0);
             }
           }
           setCookie("states", JSON.stringify(states));
@@ -180,9 +171,10 @@ const useGameRowHook = () => {
   };
 
   const pressBackspace = () => {
-    if (number > 0 && !gameFinished) {
-      states[tryCount][number - 1] = KEY_STATE.EMPTY;
-      guessedWords[tryCount][number - 1] = null;
+    if (number > 0 && !gameOver) {
+      console.log(states)
+      states[currentStep][number - 1] = KEY_STATE.EMPTY;
+      guessedWords[currentStep][number - 1] = null;
       setStates(states);
       setGuessedWords(guessedWords);
       setNumber(number - 1);
@@ -190,7 +182,7 @@ const useGameRowHook = () => {
   };
 
   const onKeyPressed = (event: IKeyBoardEvent) => {
-    if (!gameFinished) {
+    if (!gameOver) {
       if (isValidChar(event)) {
         pressLetter(event);
       } else if (event.keyCode === KEYBOARD.BACKSPACE) {

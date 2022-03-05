@@ -3,9 +3,12 @@ import { SETTING } from "../../global/global";
 import KeyBoard from "../keyboard/keyboard";
 import "./game-row.scss";
 import useGameRowHook from "./game-row-hook";
-import { useEffect, useRef } from "react";
+import { useContext, useEffect, useRef } from "react";
+import { GameContext } from "../../pages/game-page";
 
 const GameRow = () => {
+  const {gameData} = useContext(GameContext)
+  const {wordLength} = gameData
   const {
     onKeyPressed,
     pressEnter,
@@ -29,7 +32,7 @@ const GameRow = () => {
   var rows = [];
   for (var i = 0; i < SETTING.COUNT_OF_TRY; i++) {
     var tile = [];
-    for (var j = 0; j < SETTING.LENGTH_OF_WORD; j++) {
+    for (var j = 0; j < wordLength; j++) {
       tile.push(
         <GameTile
           state={states[i][j]}

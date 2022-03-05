@@ -6,7 +6,7 @@ const SvgIcon = (props: ISvgIcon) => {
     height = "24",
     viewBox = "0 0 24 24",
     width = "24",
-    fill = "var(--color-tone-2)",
+    fill = "var(--color-tone-8)",
     d,
     handleClick,
   } = props;

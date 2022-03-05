@@ -15,7 +15,7 @@ const Modal: FC<IModalProps> = (props: IModalProps) => {
       <div className="content">
         <header>
           <SvgIcon
-            fill="var(--color-tone-2)"
+            fill="var(--color-tone-8)"
             d={SVGICON.CLOSE}
             handleClick={handleClose}
           />

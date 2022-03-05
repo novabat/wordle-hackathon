@@ -4,21 +4,22 @@ import Header from "../header/header";
 import Modal from "../modal/modal";
 import "./game.scss";
 const Game = () => {
-  const [showModal, setShowModal] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
 
-  const handleClose = () => {
-    setShowModal(false);
+  const handleCloseHelp = () => {
+    setShowHelp(false);
   };
-  const handleShowModal = () => {
-    setShowModal(true);
+  const handleShowHelp = () => {
+    setShowHelp(true);
   };
 
   return (
+    <>
     <div id="game">
-      <Header handleShowModal={handleShowModal} />
+      <Header handleShowModal={handleShowHelp} />
       <GameRow />
-      <Modal show={showModal} handleClose={handleClose}>
-        <div style={{color: "#ffffff"}}>
+      <Modal show={showHelp} handleClose={handleCloseHelp}>
+        <div style={{color: "black"}}>
           <p>Welcome to BFHL Health Wordle. Guess words related to healthcare and get on the high score board. </p>
           <hr />
           <h2>Rules</h2>
@@ -46,6 +47,7 @@ const Game = () => {
         </div>
       </Modal>
     </div>
+    </>
   );
 };
 export default Game;
