@@ -1,17 +1,18 @@
 import "@fontsource/mulish";
 import ReactDOM from "react-dom";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import HomePage from "./pages/home-page";
-import GamePage from "./pages/game-page";
+import { createContext, useState } from "react";
+import {initialGameData} from "./constants";
+import Main from "./pages/main";
+
+export const GameContext = createContext<{gameData: any,updateGameData:any}>({gameData: initialGameData, updateGameData: (gameData:any) => null});
 
 export default function App() {
-  return (
-    <BrowserRouter>
-      <Routes>
-          <Route index element={<HomePage />} />
-          <Route path="game" element={<GamePage />} />
-      </Routes>
-    </BrowserRouter>
+  const [gameState,updateGameState] = useState(initialGameData)
+  return(
+
+    <GameContext.Provider value={{gameData:gameState, updateGameData: updateGameState }}>
+      <Main />
+    </GameContext.Provider>
   );
 }
 

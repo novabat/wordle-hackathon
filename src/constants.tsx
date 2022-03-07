@@ -1,11 +1,12 @@
 export const initialGameData = {
-    userId: "",
-    wordLength: 5,
+    userId: "test",
+    wordLength: 0,
     currentStep: 0,
-    absentLetters: [],
-    presentLetters: [],
-    correctLetters: [],
-    gameOver: false
+    selectedLetters: [],
+    states: [],
+    guessedWords: [], 
+    gameOver: false,
+    gameStart: false,
 
 }
 
@@ -15,13 +16,17 @@ export const gameContext = {
 }
 
 
+export const generateUserPayload = {
+    userId: "",
+}
+
 export const startGamePayload = {
     userId: "", //need to attach random number to the end
     wordLength: 0,
 }
 
-export const generateUserPayload = {
-    userId: "",
+export const startGameResponse = {
+    isValidUserName: ""
 }
 
 //frontend payload

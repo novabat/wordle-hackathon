@@ -16,7 +16,8 @@ import {
   removeByAttr,
 } from "./game-row-helper";
 import { IKeyBoardEvent } from "./game-row-interface";
-import { GameContext } from "../../pages/game-page";
+import { GameContext } from "../..";
+import axios from "axios";
 var words = require("an-array-of-english-words");
 
 const useGameRowHook = () => {
@@ -28,9 +29,6 @@ const useGameRowHook = () => {
   const initialStates = Array.from(Array(SETTING.COUNT_OF_TRY), () =>
     new Array(gameData.wordLength).fill(KEY_STATE.EMPTY)
   );
-  const [guessedWords, setGuessedWords]: Array<any> =
-    useState(initialGuessedWords);
-  const [states, setStates]: any = useState(initialStates);
   const [animations, setAnimations]: any = useState(
     Array.from(Array(SETTING.COUNT_OF_TRY), () =>
       new Array(gameData.wordLength).fill(null)
@@ -41,7 +39,6 @@ const useGameRowHook = () => {
   );
   const [number, setNumber] = useState(0);
   const {currentStep, gameOver, wordLength} = gameData;
-  const [selectedLetters, setSelectedLetters] = useState<any>([]);
   const [cookies, setCookie] = useCookies([
     "index",
     "states",
@@ -56,21 +53,22 @@ const useGameRowHook = () => {
   const { Difference_In_Days: index } = findDateDiff();
   useEffect(() => {
     setWord(gameWords[index]);
+    console.log(gameData.wordLength)
     if (
       cookies.guessedWords &&
       cookies.states &&
       cookies.selectedLetters &&
       parseInt(cookies.index) === index
     ) {
-      setGuessedWords(cookies.guessedWords);
-      setStates(cookies.states);
-      setSelectedLetters(cookies.selectedLetters);
-      updateGameData({...gameData,currentStep:cookies.currentStep})
+      updateGameData({...gameData,currentStep:cookies.currentStep,guessedWords:cookies.guessedWords,states:cookies.states,selectedLetters:cookies.selectedLetters})
       setNumber(parseInt(cookies.number));
       setAnimations(cookies.animations);
       if(cookies.gameOver ===1){
         updateGameData({...gameData,gameOver:true})
       }
+    }
+    else{
+      updateGameData({...gameData, states:initialStates,guessedWords: initialGuessedWords});
     }
   }, []);
   const splitedWord = word.split("");
@@ -92,51 +90,63 @@ const useGameRowHook = () => {
 
   const pressLetter = (event: IKeyBoardEvent | string) => {
     if (number < wordLength && !gameOver) {
+      let guessedWordsNew = gameData.guessedWords;
       if (isEvent(event)) {
-        guessedWords[currentStep][number] = event.key.toLowerCase();
+        guessedWordsNew[currentStep][number] = event.key.toLowerCase();
+        updateGameData({...gameData,guessedWords:guessedWordsNew})
       } else {
-        guessedWords[currentStep][number] = event.toLowerCase();
+        guessedWordsNew[currentStep][number] = event.toLowerCase();
+        updateGameData({...gameData,guessedWords:guessedWordsNew})
       }
-      states[currentStep][number] = KEY_STATE.TBD;
-      setGuessedWords(guessedWords);
-      setStates(states);
+      let statesNew = gameData.states;
+      statesNew[currentStep][number] = KEY_STATE.TBD;
+      updateGameData({...gameData,guessedWords:guessedWordsNew,states:statesNew})
       setNumber(number + 1);
     }
   };
 
-  const pressEnter = () => {
+  const pressEnter = async() => {
     if (!gameOver) {
       if (number < wordLength) {
         refreshMessage(MESSAGE.NOT_ENOUGH_LETTER);
         refreshStates("invalid");
       } else {
-        if (words.includes(guessedWords[currentStep].join(""))) {
+        // const payload = {userId: gameData.userId,wordEntered:gameData.guessedWords[currentStep].join(""),currentStep:gameData.currentStep}
+        // const response = await axios.post('https://wordle-bfhl.herokuapp.com/ingame/gameAttempt',payload)
+        // if(response.data){
+        //   if(response.data.isWordValid){
+            
+        //   }
+          
+        // }
+        if (words.includes(gameData.guessedWords[currentStep].join(""))) {
           for (var i: number = 0; i < wordLength; i++) {
             let keyState;
-            if (guessedWords[currentStep][i] === splitedWord[i]) {
+            if (gameData.guessedWords[currentStep][i] === splitedWord[i]) {
               removeByAttr(
-                selectedLetters,
+                gameData.selectedLetters,
                 "letter",
-                guessedWords[currentStep][i]
+                gameData.guessedWords[currentStep][i]
               );
               keyState = KEY_STATE.CORRECT;
-            } else if (splitedWord.includes(guessedWords[currentStep][i])) {
+            } else if (splitedWord.includes(gameData.guessedWords[currentStep][i])) {
               keyState = KEY_STATE.PRESENT;
             } else {
               keyState = KEY_STATE.ABSENT;
             }
-            states[currentStep][i] = keyState;
-            selectedLetters.push({
-              letter: guessedWords[currentStep][i],
+            let statesNew = gameData.states
+            let selectedLettersNew = gameData.selectedLetters
+            statesNew[currentStep][i] = keyState;
+            selectedLettersNew.push({
+              letter: gameData.guessedWords[currentStep][i],
               state: keyState,
             });
-            setStates(states);
-            setSelectedLetters(selectedLetters);
+            updateGameData({...gameData, states:statesNew, selectedLetters:selectedLettersNew})
           }
           if (currentStep === SETTING.COUNT_OF_TRY - 1) {
             updateGameData({...gameData, gameOver:true})
           }
-          if (guessedWords[currentStep].join("") === word) {
+          if (gameData.guessedWords[currentStep].join("") === word) {
             animations[currentStep].fill(ANIMATIONS.SCALE_CENTER);
             setAnimations(animations);
             refreshMessage(MESSAGE.CORRECT);
@@ -158,9 +168,9 @@ const useGameRowHook = () => {
               setCookie("gameOver", 0);
             }
           }
-          setCookie("states", JSON.stringify(states));
-          setCookie("guessedWords", JSON.stringify(guessedWords));
-          setCookie("selectedLetters", JSON.stringify(selectedLetters));
+          setCookie("states", JSON.stringify(gameData.states));
+          setCookie("guessedWords", JSON.stringify(gameData.guessedWords));
+          setCookie("selectedLetters", JSON.stringify(gameData.selectedLetters));
           setCookie("animations", JSON.stringify(animations));
           setCookie("index", index);
         } else {
@@ -172,11 +182,11 @@ const useGameRowHook = () => {
 
   const pressBackspace = () => {
     if (number > 0 && !gameOver) {
-      console.log(states)
-      states[currentStep][number - 1] = KEY_STATE.EMPTY;
-      guessedWords[currentStep][number - 1] = null;
-      setStates(states);
-      setGuessedWords(guessedWords);
+      let statesNew = gameData.states;
+      let guessedWordsNew = gameData.guessedWords;
+      statesNew[currentStep][number - 1] = KEY_STATE.EMPTY;
+      guessedWordsNew[currentStep][number - 1] = null;
+      updateGameData({...gameData,states:statesNew,guessedWords:guessedWordsNew })
       setNumber(number - 1);
     }
   };
@@ -200,12 +210,9 @@ const useGameRowHook = () => {
     pressEnter,
     pressLetter,
     pressBackspace,
-    states,
     animations,
     tryStates,
-    guessedWords,
-    message,
-    selectedLetters,
+    message
   };
 };
 export default useGameRowHook;

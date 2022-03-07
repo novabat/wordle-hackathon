@@ -1,0 +1,39 @@
+#home-page{
+    height: 100vh !important;
+    background-color: #673AB7;
+    background-image: linear-gradient(180deg, #673AB7 0%, #512DA8 90%);
+    overflow-y: hidden;
+
+}
+
+.page-header{
+    text-align: center;
+}
+.difficulty-container{
+    width: 200px;
+    display: flex;
+    justify-content: space-between;
+    margin: auto;
+}
+.button-container{
+    display: flex;
+    justify-content: center;
+    padding: 20px 0;
+    width: 200px;
+    margin: auto;
+}
+.button{
+    height: 40px;
+    border-radius: 25px;
+    background-color: #ef7843;
+    color: white;
+}
+.page-content{
+    width: 90%;
+    height: calc(100% - 60px);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    margin: auto;
+    color: white;
+}

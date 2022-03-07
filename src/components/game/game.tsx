@@ -15,8 +15,8 @@ const Game = () => {
 
   return (
     <>
+    <Header handleShowModal={handleShowHelp} />
     <div id="game">
-      <Header handleShowModal={handleShowHelp} />
       <GameRow />
       <Modal show={showHelp} handleClose={handleCloseHelp}>
         <div style={{color: "black"}}>
